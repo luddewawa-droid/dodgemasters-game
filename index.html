@@ -28,8 +28,6 @@
             font-size: 30px;
             top: 20px;
             left: 20px;
-            position: absolute;
-            z-index: 1;
         }
 
         .best-score {
@@ -37,8 +35,6 @@
             font-size: 30px;
             top: 60px;
             left: 20px;
-            position: absolute;
-            z-index: 1;
         }
 
         .game-over {
@@ -47,8 +43,6 @@
             top: 150px;
             left: 50%;
             transform: translateX(-50%);
-            position: absolute;
-            z-index: 1;
         }
 
         .restart {
@@ -58,8 +52,6 @@
             left: 50%;
             transform: translateX(-50%);
             cursor: pointer;
-            position: absolute;
-            z-index: 1;
         }
 
         .start-btn {
@@ -93,8 +85,8 @@
         // Game variables
         let player = { x: canvas.width / 2, y: canvas.height - 30, width: 30, height: 30, speed: 5 };
         let blocks = [];
-        let gameTime = 0;  // Time in seconds (with decimals)
-        let bestScore = parseFloat(localStorage.getItem('bestScore')) || 0;
+        let gameTime = 0;
+        let bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
         let gameInterval, blockInterval, timerInterval, speedIncreaseInterval;
         let gameOver = false;
 
@@ -174,7 +166,7 @@
             }
         }
 
-        // Display game timer in seconds with 2 decimal places
+        // Display game timer
         function updateTimer() {
             gameTime += 0.01;  // Increase game time by 0.01 seconds (10 milliseconds)
             document.getElementById('timer').innerText = gameTime.toFixed(2);  // Show 2 decimal places
@@ -194,7 +186,7 @@
             // Save best score if needed
             if (gameTime > bestScore) {
                 bestScore = gameTime;
-                localStorage.setItem('bestScore', bestScore.toFixed(2));
+                localStorage.setItem('bestScore', bestScore);
             }
             document.getElementById('bestScore').innerText = bestScore.toFixed(2);
         }
@@ -206,21 +198,16 @@
             gameTime = 0;
             gameOver = false;
 
-            // Hide game over and restart elements
             document.querySelector('.game-over').style.display = 'none';
             document.querySelector('.restart').style.display = 'none';
-            
-            // Reset and display game elements
-            document.getElementById('timer').innerText = gameTime.toFixed(2);
-            document.querySelector('.overlay').style.display = 'block';  // Ensure Timer is shown
-            document.querySelector('.best-score').style.display = 'block';  // Ensure Best Score is shown
-            
-            canvas.style.display = 'block';  // Show canvas and start the game
-            startButton.style.display = 'none';  // Hide the start button
+            document.getElementById('timer').innerText = '0.00';
+
+            canvas.style.display = 'block';
+            startButton.style.display = 'none';
 
             gameInterval = setInterval(gameLoop, 1000 / 60); // 60 FPS
             blockInterval = setInterval(generateBlocks, 1000); // New block every second
-            timerInterval = setInterval(updateTimer, 10); // Timer updates every 10ms (0.01 seconds)
+            timerInterval = setInterval(updateTimer, 10); // Timer updates every 10ms
             speedIncreaseInterval = setInterval(increaseBlockSpeed, 2000); // Speed increase every 2 seconds
         }
 
@@ -238,5 +225,11 @@
 
         // Start the game when the button is clicked
         startButton.addEventListener('click', () => {
-           
+            startButton.style.display = 'none'; // Hide the start button
+            restartGame(); // Initialize the game
+        });
+
+    </script>
+</body>
+</html>
 
