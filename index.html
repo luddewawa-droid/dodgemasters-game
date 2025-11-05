@@ -28,6 +28,8 @@
             font-size: 30px;
             top: 20px;
             left: 20px;
+            position: absolute;
+            z-index: 1;
         }
 
         .best-score {
@@ -35,6 +37,8 @@
             font-size: 30px;
             top: 60px;
             left: 20px;
+            position: absolute;
+            z-index: 1;
         }
 
         .game-over {
@@ -43,6 +47,8 @@
             top: 150px;
             left: 50%;
             transform: translateX(-50%);
+            position: absolute;
+            z-index: 1;
         }
 
         .restart {
@@ -52,6 +58,8 @@
             left: 50%;
             transform: translateX(-50%);
             cursor: pointer;
+            position: absolute;
+            z-index: 1;
         }
 
         .start-btn {
@@ -72,8 +80,8 @@
 <body>
     <button id="startButton" class="start-btn">Start Game</button>
     <canvas id="gameCanvas" width="600" height="400" style="display: none;"></canvas>
-    <div class="overlay" style="display: none;">Time: <span id="timer">0</span>ms</div>
-    <div class="best-score" style="display: none;">Best Time: <span id="bestScore">0</span>ms</div>
+    <div class="overlay" style="display: none;">Time: <span id="timer">0</span>s</div>
+    <div class="best-score" style="display: none;">Best Time: <span id="bestScore">0</span>s</div>
     <div class="game-over" style="display: none;">You Died!</div>
     <div class="restart" style="display: none;" onclick="restartGame()">Restart Game</div>
 
@@ -85,7 +93,7 @@
         // Game variables
         let player = { x: canvas.width / 2, y: canvas.height - 30, width: 30, height: 30, speed: 5 };
         let blocks = [];
-        let gameTime = 0; // Time in milliseconds
+        let gameTime = 0;
         let bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
         let gameInterval, blockInterval, timerInterval, speedIncreaseInterval;
         let gameOver = false;
@@ -198,12 +206,17 @@
             gameTime = 0;
             gameOver = false;
 
+            // Hide game over and restart elements
             document.querySelector('.game-over').style.display = 'none';
             document.querySelector('.restart').style.display = 'none';
+            
+            // Reset and display game elements
             document.getElementById('timer').innerText = gameTime;
-
-            canvas.style.display = 'block';
-            startButton.style.display = 'none';
+            document.querySelector('.overlay').style.display = 'block';  // Ensure Timer is shown
+            document.querySelector('.best-score').style.display = 'block';  // Ensure Best Score is shown
+            
+            canvas.style.display = 'block';  // Show canvas and start the game
+            startButton.style.display = 'none';  // Hide the start button
 
             gameInterval = setInterval(gameLoop, 1000 / 60); // 60 FPS
             blockInterval = setInterval(generateBlocks, 1000); // New block every second
@@ -227,7 +240,7 @@
         startButton.addEventListener('click', () => {
             restartGame();
         });
-
     </script>
 </body>
 </html>
+
