@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodge the Falling Blocks</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #34495e;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        canvas {
+            background-color: #2c3e50;
+            border: 2px solid #ecf0f1;
+        }
+
+        .overlay {
+            color: white;
+            font-size: 30px;
+            top: 20px;
+            left: 20px;
+        }
+
+        .best-score {
+            color: #2ecc71;
+            font-size: 30px;
+            top: 60px;
+            left: 20px;
+        }
+
+        .game-over {
+            color: #e74c3c;
+            font-size: 40px;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .restart {
+            color: #3498db;
+            font-size: 30px;
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+        }
+
+        .start-btn {
+            font-size: 30px;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .start-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <button id="startButton" class="start-btn">Start Game</button>
+    <canvas id="gameCanvas" width="600" height="400" style="display: none;"></canvas>
+    <div class="overlay" style="display: none;">Time: <span id="timer">0</span>s</div>
+    <div class="best-score" style="display: none;">Best Time: <span id="bestScore">0</span>s</div>
+    <div class="game-over" style="display: none;">You Died!</div>
+    <div class="restart" style="display: none;" onclick="restartGame()">Restart Game</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+
+        // Game variables
+        let player = { x: canvas.width / 2, y: canvas.height - 30, width: 30, height: 30, speed: 5 };
+        let blocks = [];
+        let gameTime = 0;
+        let bestScore = parseInt(localStorage.getItem('bestScore')) || 0;
+        let gameInterval, blockInterval, timerInterval, speedIncreaseInterval;
+        let gameOver = false;
+
+        // Player movement keys
+        let keys = {
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        // Listen for keydown and keyup to handle movement
+        document.addEventListener('keydown', (event) => {
+            if (keys.hasOwnProperty(event.key)) {
+                keys[event.key] = true;
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (keys.hasOwnProperty(event.key)) {
+                keys[event.key] = false;
+            }
+        });
+
+        // Generate falling blocks
+        function generateBlocks() {
+            const blockWidth = Math.random() * (canvas.width / 5) + 20;
+            const blockX = Math.random() * (canvas.width - blockWidth);
+            blocks.push({ x: blockX, y: -30, width: blockWidth, height: 30, speed: Math.random() * 2 + 2 });
+        }
+
+        // Draw the player
+        function drawPlayer() {
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        // Draw the falling blocks
+        function drawBlocks() {
+            for (let i = 0; i < blocks.length; i++) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.fillRect(blocks[i].x, blocks[i].y, blocks[i].width, blocks[i].height);
+            }
+        }
+
+        // Move the player
+        function movePlayer() {
+            if (keys['ArrowLeft'] && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight'] && player.x + player.width < canvas.width) {
+                player.x += player.speed;
+            }
+        }
+
+        // Move the blocks and check for collisions
+        function moveBlocks() {
+            for (let i = 0; i < blocks.length; i++) {
+                blocks[i].y += blocks[i].speed;
+                if (blocks[i].y > canvas.height) {
+                    blocks.splice(i, 1);  // Remove block if it goes off the screen
+                    i--;
+                }
+
+                // Check for collisions with the player
+                if (blocks[i].y + blocks[i].height > player.y &&
+                    blocks[i].x < player.x + player.width &&
+                    blocks[i].x + blocks[i].width > player.x) {
+                    endGame();
+                    return;
+                }
+            }
+        }
+
+        // Increase the falling block speed every 2 seconds
+        function increaseBlockSpeed() {
+            for (let i = 0; i < blocks.length; i++) {
+                blocks[i].speed += 0.1;  // Increase block speed by 0.1 every 2 seconds
+            }
+        }
+
+        // Display game timer
+        function updateTimer() {
+            gameTime++;
+            document.getElementById('timer').innerText = gameTime;
+        }
+
+        // End the game
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(blockInterval);
+            clearInterval(timerInterval);
+            clearInterval(speedIncreaseInterval);
+
+            gameOver = true;
+            document.querySelector('.game-over').style.display = 'block';
+            document.querySelector('.restart').style.display = 'block';
+
+            // Save best score if needed
+            if (gameTime > bestScore) {
+                bestScore = gameTime;
+                localStorage.setItem('bestScore', bestScore);
+            }
+            document.getElementById('bestScore').innerText = bestScore;
+        }
+
+        // Restart the game
+        function restartGame() {
+            player = { x: canvas.width / 2, y: canvas.height - 30, width: 30, height: 30, speed: 5 };
+            blocks = [];
+            gameTime = 0;
+            gameOver = false;
+
+            document.querySelector('.game-over').style.display = 'none';
+            document.querySelector('.restart').style.display = 'none';
+            document.getElementById('timer').innerText = gameTime;
+
+            canvas.style.display = 'block';
+            startButton.style.display = 'none';
+
+            gameInterval = setInterval(gameLoop, 1000 / 60); // 60 FPS
+            blockInterval = setInterval(generateBlocks, 1000); // New block every second
+            timerInterval = setInterval(updateTimer, 1000); // Timer updates every second
+            speedIncreaseInterval = setInterval(increaseBlockSpeed, 2000); // Speed increase every 2 seconds
+        }
+
+        // Main game loop
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+
+            if (!gameOver) {
+                movePlayer();
+                moveBlocks();
+                drawPlayer();
+                drawBlocks();
+            }
+        }
+
+        // Start the game when the button is clicked
+        startButton.addEventListener('click', () => {
+            restartGame();
+        });
+
+    </script>
+</body>
+</html>
